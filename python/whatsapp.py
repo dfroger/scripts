@@ -127,7 +127,8 @@ try:
     YOWSUP_VERSION_MAJOR, YOWSUP_VERSION_MINOR = yowsup_version(yowsup)
     from yowsup.common import YowConstants
     from yowsup.layers import YowLayerEvent
-    from yowsup.layers.auth import AuthError
+    if YOWSUP_VERSION_MAJOR < 3:
+        from yowsup.layers.auth import AuthError
     from yowsup.layers.interface import YowInterfaceLayer, ProtocolEntityCallback
     from yowsup.layers.network import YowNetworkLayer
     from yowsup.layers.protocol_contacts.protocolentities.iq_statuses_get import GetStatusesIqProtocolEntity
@@ -651,13 +652,16 @@ class Server(YowInterfaceLayer):
         """ Receive something from whatsapp server. """
         try:
             self.getStack().getLayer(0).handle_read()
-        except AuthError as e:
-            weechat.prnt('', '%s: Error from server: %s' %(SCRIPT_NAME, e))
-            self.disconnect()
-            if weechat.config_boolean(self.options['autoreconnect']):
-                autoreconnect_delay = 30
-                weechat.command('', '/wait %s /%s connect %s' %
-                                (autoreconnect_delay, SCRIPT_COMMAND, self.name))
+        except Exception as e:
+            if YOWSUP_VERSION_MAJOR < 3 and isinstance(e, AuthError):
+                weechat.prnt('', '%s: Error from server: %s' %(SCRIPT_NAME, e))
+                self.disconnect()
+                if weechat.config_boolean(self.options['autoreconnect']):
+                    autoreconnect_delay = 30
+                    weechat.command('', '/wait %s /%s connect %s' %
+                                    (autoreconnect_delay, SCRIPT_COMMAND, self.name))
+            else:
+                raise
 
     def recv_message(self, buddy, message):
         """ Receive a message from buddy. """
