@@ -95,9 +95,25 @@ SCRIPT_LICENSE = "GPL3"
 SCRIPT_DESC    = "Whatsapp protocol for WeeChat"
 SCRIPT_COMMAND = SCRIPT_NAME
 
+YOWSUP_VERSION_MAJOR = None
+YOWSUP_VERSION_MINOR = None
+
 import re
 
 import_ok = True
+
+
+def yowsup_version(yowsup):
+    """ Get yowsup major and minor verion numbers. """
+    try:
+        parts = yowsup.version.split('.')
+        major, minor = int(parts[0]), int(parts[1])
+        return major, minor
+    except:
+        print('Failed to get yowsup version numbers')
+        raise
+
+
 
 try:
     import weechat
@@ -107,6 +123,8 @@ except:
     import_ok = False
 
 try:
+    import yowsup
+    YOWSUP_VERSION_MAJOR, YOWSUP_VERSION_MINOR = yowsup_version(yowsup)
     from yowsup.common import YowConstants
     from yowsup.layers import YowLayerEvent
     from yowsup.layers.auth import AuthError
